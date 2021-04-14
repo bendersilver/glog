@@ -224,6 +224,8 @@ func Tg(v ...interface{}) {
 			))
 		}
 		std.mu.Unlock()
+	} else {
+		Warning("set env variable LOG_TG and LOG_TG_ID")
 	}
 	std.Output(LogCrit, fmt.Sprintln(v...))
 }
