@@ -29,7 +29,7 @@ const (
 	LogDeb
 )
 
-var std = &Logger{
+var std = &logger{
 	out:   os.Stderr,
 	level: LogDeb,
 }
@@ -102,7 +102,7 @@ func tgLoop() {
 	}
 }
 
-type Logger struct {
+type logger struct {
 	mu     sync.Mutex
 	out    io.Writer
 	buf    []byte
@@ -113,13 +113,13 @@ type Logger struct {
 }
 
 // Writer returns the output destination for the logger.
-func (l *Logger) Writer() io.Writer {
+func (l *logger) Writer() io.Writer {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	return l.out
 }
 
-func (l *Logger) Output(lv lvl, s string) error {
+func (l *logger) Output(lv lvl, s string) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.buf = l.buf[:0]
@@ -149,60 +149,6 @@ func (l *Logger) Output(lv lvl, s string) error {
 	}
 	_, err := l.out.Write(l.buf)
 	return err
-}
-
-// Printf calls l.Output to print to the logger.
-func (l *Logger) Printf(format string, v ...interface{}) {
-	l.Output(LogErr, fmt.Sprintf(format, v...))
-}
-
-// Print calls l.Output to print to the logger.
-func (l *Logger) Print(v ...interface{}) {
-	l.Output(LogErr, fmt.Sprint(v...))
-}
-
-// Println calls l.Output to print to the logger.
-func (l *Logger) Println(v ...interface{}) {
-	l.Output(LogErr, fmt.Sprintln(v...))
-}
-
-// Fatal is equivalent to l.Print() followed by a call to os.Exit(1).
-func (l *Logger) Fatal(v ...interface{}) {
-	l.Output(LogCrit, fmt.Sprint(v...))
-	os.Exit(1)
-}
-
-// Fatalf is equivalent to l.Printf() followed by a call to os.Exit(1).
-func (l *Logger) Fatalf(format string, v ...interface{}) {
-	l.Output(LogCrit, fmt.Sprintf(format, v...))
-	os.Exit(1)
-}
-
-// Fatalln is equivalent to l.Println() followed by a call to os.Exit(1).
-func (l *Logger) Fatalln(v ...interface{}) {
-	l.Output(LogCrit, fmt.Sprintln(v...))
-	os.Exit(1)
-}
-
-// Panic is equivalent to l.Print() followed by a call to panic().
-func (l *Logger) Panic(v ...interface{}) {
-	s := fmt.Sprint(v...)
-	l.Output(LogCrit, s)
-	panic(s)
-}
-
-// Panicf is equivalent to l.Printf() followed by a call to panic().
-func (l *Logger) Panicf(format string, v ...interface{}) {
-	s := fmt.Sprintf(format, v...)
-	l.Output(LogCrit, s)
-	panic(s)
-}
-
-// Panicln is equivalent to l.Println() followed by a call to panic().
-func (l *Logger) Panicln(v ...interface{}) {
-	s := fmt.Sprintln(v...)
-	l.Output(LogCrit, s)
-	panic(s)
 }
 
 // Writer returns the output destination for the standard logger.
