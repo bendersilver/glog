@@ -215,7 +215,7 @@ func Tg(v ...interface{}) {
 	if std.botBuf != nil {
 		std.mu.Lock()
 		if std.botBuf.Len() < 1024 {
-			_, fn, line, _ := runtime.Caller(2)
+			_, fn, line, _ := runtime.Caller(1)
 			std.botBuf.WriteString(fmt.Sprintf("%-12s %s:%d # %s",
 				time.Now().Format("15:04:05.999"),
 				path.Base(fn),
