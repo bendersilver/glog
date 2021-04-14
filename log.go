@@ -156,8 +156,7 @@ func Writer() io.Writer {
 	return std.Writer()
 }
 
-// Tg -
-func Tg(v ...interface{}) {
+func tgLog(v ...interface{}) {
 	if std.botBuf != nil {
 		std.mu.Lock()
 		if std.botBuf.Len() < 1024 {
@@ -173,6 +172,21 @@ func Tg(v ...interface{}) {
 	} else {
 		Warning("set env variable LOG_TG and LOG_TG_ID")
 	}
+}
+
+// TgInfo -
+func TgInfo(v ...interface{}) {
+	tgLog(v...)
+}
+
+// TgInfof -
+func TgInfof(format string, a ...interface{}) {
+	tgLog(fmt.Sprintf(format, a...))
+}
+
+// Tg -
+func Tg(v ...interface{}) {
+	tgLog(v...)
 	std.Output(LogCrit, fmt.Sprintln(v...))
 }
 
