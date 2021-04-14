@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path"
 	"runtime"
@@ -172,6 +173,11 @@ func tgLog(v ...interface{}) {
 	} else {
 		Warning("set env variable LOG_TG and LOG_TG_ID")
 	}
+}
+
+// Logger -
+func Logger(tag string) *log.Logger {
+	return log.New(std.out, tag, log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
 }
 
 // TgInfo -

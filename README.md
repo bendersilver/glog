@@ -29,6 +29,6 @@ func main() {
 	glog.Notice("Notice")
 	// ....
 	// logger http server
-	// logger = log.New(glog.Writer(), "SWR: ", log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
+	// logger = glog.Logger("prfix logger ")
 }
 ```
