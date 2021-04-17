@@ -9,7 +9,6 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,6 +27,7 @@ const (
 	LogNote
 	LogInf
 	LogDeb
+	LogPass // пропуск
 )
 
 var std = &logger{
@@ -67,12 +67,12 @@ func init() {
 					Synchronous: true,
 				})
 				if err != nil {
-					fmt.Println(err, "\n")
+					Warning(err)
 				}
 			case "LOG_TG_ID":
 				i, err := strconv.Atoi(spl[1])
 				if err != nil {
-					fmt.Println(err, "\n")
+					Warning(err)
 				} else {
 					std.botID = &tb.Chat{ID: int64(i)}
 				}
@@ -88,7 +88,7 @@ func init() {
 func tgLoop() {
 	var str string
 	var err error
-	tik := time.Tick(time.Second * 10)
+	tik := time.Tick(time.Second * 2)
 	for range tik {
 		if std.botBuf.Len() > 0 {
 			std.mu.Lock()
@@ -180,25 +180,18 @@ func Logger(tag string) *log.Logger {
 	return log.New(std.out, tag, log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
 }
 
-// TgInfo -
-func TgInfo(v ...interface{}) {
+// SendTg -
+func SendTg(l lvl, v ...interface{}) {
 	tgLog(v...)
+	if l != LogPass {
+		std.Output(l, fmt.Sprintln(v...))
+	}
+
 }
 
-// TgInfof -
-func TgInfof(format string, a ...interface{}) {
-	tgLog(fmt.Sprintf(format, a...))
-}
-
-// Tg -
-func Tg(v ...interface{}) {
-	tgLog(v...)
-	std.Output(LogCrit, fmt.Sprintln(v...))
-}
-
-// Tgf -
-func Tgf(format string, a ...interface{}) {
-	Tg(fmt.Sprintf(format, a...))
+// SendTgf -
+func SendTgf(l lvl, format string, a ...interface{}) {
+	SendTg(l, fmt.Sprintf(format, a...))
 }
 
 // Debug -
@@ -262,11 +255,14 @@ func Fatalf(format string, a ...interface{}) {
 	os.Exit(1)
 }
 
-// Recover -
-func Recover(e *error) {
-	if err := recover(); err != nil {
-		*e = fmt.Errorf("%v\n%s", err, debug.Stack())
-	}
+// Critical -
+func Critical(v ...interface{}) {
+	std.Output(LogCrit, fmt.Sprintln(v...))
+}
+
+// Criticalf -
+func Criticalf(format string, a ...interface{}) {
+	std.Output(LogCrit, fmt.Sprintf(format, a...))
 }
 
 // SetPath - set path loller file
