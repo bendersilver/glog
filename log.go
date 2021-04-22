@@ -166,7 +166,7 @@ func tgLog(v ...interface{}) {
 		if std.botBuf.Len() < 1024 {
 			_, fn, line, _ := runtime.Caller(2)
 			std.botBuf.WriteString(fmt.Sprintf("%-12s %s:%d # %s",
-				time.Now().Format("15:04:05.999"),
+				time.Now().In(loc).Format("15:04:05.999"),
 				path.Base(fn),
 				line,
 				fmt.Sprintln(v...),
