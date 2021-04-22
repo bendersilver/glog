@@ -17,6 +17,8 @@ import (
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
+var loc *time.Location
+
 type lvl int
 
 // Log levels.
@@ -37,6 +39,7 @@ var std = &logger{
 
 // auto init path
 func init() {
+	loc, _ = time.LoadLocation("Asia/Yekaterinburg")
 	var f *os.File
 	var err error
 	exe, _ := os.Executable()
@@ -140,7 +143,7 @@ func (l *logger) Output(lv lvl, s string) error {
 	}
 	_, fn, line, _ := runtime.Caller(2)
 	l.buf = append(l.buf, fmt.Sprintf("%-23s %s:%d ▶ \033[0m %s",
-		time.Now().Format("2006-01-02 15:04:05.999"),
+		time.Now().In(loc).Format("2006-01-02 15:04:05.999"),
 		path.Base(fn),
 		line,
 		s,
