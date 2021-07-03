@@ -17,7 +17,7 @@ type lvl int
 
 // Log levels.
 const (
-	LogCrit lvl = iota
+	LogCrit lvl = 1 << iota
 	LogErr
 	LogWarn
 	LogNote
@@ -30,6 +30,7 @@ var loc *time.Location
 var minLvl lvl
 
 func init() {
+	minLvl = LogDeb
 	loc, _ = time.LoadLocation("Asia/Yekaterinburg")
 	if err := godotenv.Load(); err != nil {
 		fmt.Fprintf(os.Stderr, "logger pool err: %v\n", err)
@@ -109,7 +110,7 @@ func (p *pp) free() {
 
 func write(lv lvl, a ...interface{}) {
 	if minLvl >= lv {
-		p := newPrinter(LogDeb)
+		p := newPrinter(lv)
 		fmt.Fprint(p.out, a...)
 		fmt.Fprint(p.out, "\n")
 		p.free()
@@ -118,7 +119,7 @@ func write(lv lvl, a ...interface{}) {
 
 func writeFormat(lv lvl, format string, a ...interface{}) {
 	if minLvl >= lv {
-		p := newPrinter(LogDeb)
+		p := newPrinter(lv)
 		if len(format) == 0 || format[len(format)-1] != '\n' {
 			format += "\n"
 		}
