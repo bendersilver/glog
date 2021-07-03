@@ -2,9 +2,10 @@
 
 ```sh
 # .env file
-LOG_PATH=path to log
-LOG_TG=telegram bot token
-LOG_TGIDS=user ids telegram # LOG_TGIDS=112312,123213,124423144
+LOG_PATH=path to log.			Default os.Stderr
+LOG_TG=telegram bot token.		Default not send
+LOG_TGIDS=user ids telegram.	Default not send	# LOG_TGIDS=112312,123213,124423144
+LOG_LEVEL=log level.			Default DEBUG		# DEBUG || INFO || NOTICE || WARNING || ERROR
 ```
 
 ```go
