@@ -95,8 +95,8 @@ func send() {
 func Tg(l lvl, a ...interface{}) {
 	t := newTeleLog()
 	t.buf.Store(fmt.Sprint(a...), nil)
-	write(l, a...)
 	t.free()
+	write(l, a...)
 	send()
 }
 
@@ -104,7 +104,7 @@ func Tg(l lvl, a ...interface{}) {
 func Tgf(l lvl, format string, a ...interface{}) {
 	t := newTeleLog()
 	t.buf.Store(fmt.Sprint(a...), nil)
-	writeFormat(l, format, a...)
 	t.free()
+	writeFormat(l, format, a...)
 	send()
 }
