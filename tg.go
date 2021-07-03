@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bendersilver/help"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -16,7 +15,6 @@ type teleLog struct {
 	bot   *tb.Bot
 	ids   []int
 	buf   sync.Map
-	o     *help.OnceQueue
 	timer *time.Timer
 }
 
@@ -24,7 +22,6 @@ var tpool = sync.Pool{
 	New: func() interface{} {
 		var err error
 		t := new(teleLog)
-		t.o = new(help.OnceQueue)
 		t.bot, err = tb.NewBot(tb.Settings{
 			Token:       os.Getenv("LOG_TG"),
 			ParseMode:   tb.ModeMarkdown,
