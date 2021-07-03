@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/joho/godotenv"
 	tb "gopkg.in/tucnak/telebot.v2"
 )
 
@@ -22,6 +23,11 @@ var tpool = sync.Pool{
 	New: func() interface{} {
 		var err error
 		t := new(teleLog)
+		err = godotenv.Load()
+		if err != nil {
+			fmt.Fprint(os.Stderr, "logger telegram pool err ", err)
+			return t
+		}
 		t.bot, err = tb.NewBot(tb.Settings{
 			Token:       os.Getenv("LOG_TG"),
 			ParseMode:   tb.ModeMarkdown,
