@@ -31,7 +31,25 @@ var minLvl lvl
 
 func init() {
 	loc, _ = time.LoadLocation("Asia/Yekaterinburg")
-	minLvl = LogDeb
+	if err := godotenv.Load(); err != nil {
+		fmt.Fprintf(os.Stderr, "logger pool err: %v\n", err)
+	}
+	if lv, ok := os.LookupEnv("LOG_LEVEL"); ok {
+		switch lv {
+		case "DEBUG":
+			minLvl = LogDeb
+		case "INFO":
+			minLvl = LogInf
+		case "NOTICE":
+			minLvl = LogNote
+		case "WARNING":
+			minLvl = LogWarn
+		case "ERROR":
+			minLvl = LogErr
+		default:
+			fmt.Fprintf(os.Stderr, "log level: %s not found\n", lv)
+		}
+	}
 }
 
 func SetTimeZone(tz string) (err error) {
@@ -47,27 +65,6 @@ var lpool = sync.Pool{
 	New: func() interface{} {
 		p := &pp{
 			out: os.Stderr,
-		}
-		err := godotenv.Load()
-		if err != nil {
-			fmt.Fprint(os.Stderr, "logger pool err ", err)
-			return p
-		}
-		if lv, ok := os.LookupEnv("LOG_LEVEL"); ok {
-			switch lv {
-			case "DEBUG":
-				minLvl = LogDeb
-			case "INFO":
-				minLvl = LogInf
-			case "NOTICE":
-				minLvl = LogNote
-			case "WARNING":
-				minLvl = LogWarn
-			case "ERROR":
-				minLvl = LogErr
-			default:
-				fmt.Fprintf(os.Stderr, "log level: %s not found", lv)
-			}
 		}
 		if pt, ok := os.LookupEnv("LOG_PATH"); ok {
 			os.Mkdir(pt, os.ModePerm)
@@ -111,14 +108,16 @@ func (p *pp) free() {
 }
 
 func write(lv lvl, a ...interface{}) {
-	p := newPrinter(LogDeb)
-	fmt.Fprint(p.out, a...)
-	fmt.Fprint(p.out, "\n")
-	p.free()
+	if minLvl >= lv {
+		p := newPrinter(LogDeb)
+		fmt.Fprint(p.out, a...)
+		fmt.Fprint(p.out, "\n")
+		p.free()
+	}
 }
 
 func writeFormat(lv lvl, format string, a ...interface{}) {
-	if minLvl <= lv {
+	if minLvl >= lv {
 		p := newPrinter(LogDeb)
 		if len(format) == 0 || format[len(format)-1] != '\n' {
 			format += "\n"
