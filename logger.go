@@ -99,7 +99,7 @@ func newPrinter(lv lvl) *pp {
 		return p
 	}
 	fmt.Fprintf(p.out, "%-23s ", time.Now().In(loc).Format("2006-01-02 15:04:05.999"))
-	_, fl, line, _ := runtime.Caller(0)
+	_, fl, line, _ := runtime.Caller(3)
 	fmt.Fprintf(p.out, "%s:%d ▶ \033[0m ", path.Base(fl), line)
 	return p
 }
