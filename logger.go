@@ -201,12 +201,13 @@ func Criticalf(format string, a ...interface{}) {
 	writeFormat(LogCrit, format, a...)
 }
 
-// TO DO Delete
 // Writer returns the output destination for the standard logger.
+// TO DO Delete
 func Writer() io.Writer {
 	return newPrinter(LogPass).out
 }
 
+// Logger -
 func Logger(tag string) *log.Logger {
 	var out = os.Stderr
 	if pt, ok := os.LookupEnv("LOG_PATH"); ok {
