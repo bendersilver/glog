@@ -70,7 +70,7 @@ var lpool = sync.Pool{
 		if pt, ok := os.LookupEnv("LOG_PATH"); ok {
 			os.Mkdir(pt, os.ModePerm)
 			if ex, err := os.Executable(); err == nil {
-				p.out, err = os.OpenFile(ex+".log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+				p.out, err = os.OpenFile(path.Join(os.Getenv("LOG_PATH"), path.Base(ex)+".log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 				if err != nil {
 					fmt.Fprint(os.Stderr, "logger pool err ", err)
 				}
