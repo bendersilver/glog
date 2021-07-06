@@ -53,6 +53,7 @@ func init() {
 	}
 }
 
+// SetTimeZone -
 func SetTimeZone(tz string) (err error) {
 	loc, err = time.LoadLocation(tz)
 	return
@@ -70,7 +71,7 @@ var lpool = sync.Pool{
 		if pt, ok := os.LookupEnv("LOG_PATH"); ok {
 			os.Mkdir(pt, os.ModePerm)
 			if ex, err := os.Executable(); err == nil {
-				p.out, err = os.OpenFile(ex+".log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+				p.out, err = os.OpenFile(path.Join(os.Getenv("LOG_PATH"), path.Base(ex)+".log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 				if err != nil {
 					fmt.Fprint(os.Stderr, "logger pool err ", err)
 				}
@@ -100,7 +101,7 @@ func newPrinter(lv lvl) *pp {
 	}
 	fmt.Fprintf(p.out, "%-23s ", time.Now().In(loc).Format("2006-01-02 15:04:05.999"))
 	_, fl, line, _ := runtime.Caller(3)
-	fmt.Fprintf(p.out, "%s:%d ▶ \033[0m ", path.Base(fl), line)
+	fmt.Fprintf(p.out, "%s|%s:%d ▶ \033[0m ", path.Base(path.Dir(fl)), path.Base(fl), line)
 	return p
 }
 
