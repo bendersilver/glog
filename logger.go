@@ -112,7 +112,7 @@ func (p *pp) free() {
 func write(lv lvl, a ...interface{}) {
 	if minLvl >= lv {
 		p := newPrinter(lv)
-		fmt.Fprint(p.out, a...)
+		fmt.Fprintln(p.out, a...)
 		fmt.Fprint(p.out, "\n")
 		p.free()
 	}
@@ -139,6 +139,7 @@ func Debugf(format string, a ...interface{}) {
 	writeFormat(LogDeb, format, a...)
 }
 
+// Info -
 func Info(a ...interface{}) {
 	write(LogInf, a...)
 }
