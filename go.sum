@@ -1,3 +1,5 @@
+github.com/bendersilver/help v0.0.0-20210705093441-2fcc64b1b8d8 h1:nM8+e2mzg4oeG2A3hLadC9qr1+AO5E0gL7nZzcmDZVI=
+github.com/bendersilver/help v0.0.0-20210705093441-2fcc64b1b8d8/go.mod h1:emogFON4F8OTe6PmAP8QPdsq+1cC4iLsbVu9OAikTtU=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/joho/godotenv v1.3.0 h1:Zjp+RcGpHhGlrMbJzXTrZZPrWj+1vfm90La1wgB6Bhc=
