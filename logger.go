@@ -1,6 +1,7 @@
 package glog
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -23,7 +24,7 @@ const (
 	LogNote
 	LogInf
 	LogDeb
-	LogPass // пропуск
+	LogPass // pass log
 )
 
 var loc *time.Location
@@ -53,158 +54,173 @@ func init() {
 	}
 }
 
+// SetTimeZone -
 func SetTimeZone(tz string) (err error) {
 	loc, err = time.LoadLocation(tz)
 	return
 }
 
 type pp struct {
-	out io.Writer
+	sync.Mutex
+	out  io.Writer
+	buf  *bytes.Buffer
+	tele *teleLog
 }
 
-var lpool = sync.Pool{
-	New: func() interface{} {
-		p := &pp{
-			out: os.Stderr,
-		}
-		if pt, ok := os.LookupEnv("LOG_PATH"); ok {
-			os.Mkdir(pt, os.ModePerm)
-			if ex, err := os.Executable(); err == nil {
-				p.out, err = os.OpenFile(path.Join(ex, path.Base(ex)+".log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-				if err != nil {
-					fmt.Fprint(os.Stderr, "logger pool err ", err)
-				}
+var pool *pp
+
+func init() {
+	godotenv.Load()
+	pool = &pp{
+		buf:  new(bytes.Buffer),
+		out:  os.Stdout,
+		tele: newTelelog(),
+	}
+	if pt, ok := os.LookupEnv("LOG_PATH"); ok {
+		os.Mkdir(pt, os.ModePerm)
+		if ex, err := os.Executable(); err == nil {
+			pool.out, err = os.OpenFile(path.Join(os.Getenv("LOG_PATH"), path.Base(ex)+".log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+			if err != nil {
+				fmt.Fprint(os.Stdout, "logger pool err ", err)
 			}
 		}
-		return p
-	},
+	}
 }
 
-func newPrinter(lv lvl) *pp {
-	p := lpool.Get().(*pp)
+func (p *pp) writeHead(lv lvl) {
 	switch lv {
 	case LogCrit:
-		fmt.Fprint(p.out, "\033[35mC ")
+		fmt.Fprint(p.buf, "\033[35mC ")
 	case LogErr:
-		fmt.Fprint(p.out, "\033[31mE ")
+		fmt.Fprint(p.buf, "\033[31mE ")
 	case LogWarn:
-		fmt.Fprint(p.out, "\033[33mW ")
+		fmt.Fprint(p.buf, "\033[33mW ")
 	case LogNote:
-		fmt.Fprint(p.out, "\033[32mN ")
+		fmt.Fprint(p.buf, "\033[32mN ")
 	case LogInf:
-		fmt.Fprint(p.out, "\033[37mI ")
+		fmt.Fprint(p.buf, "\033[37mI ")
 	case LogDeb:
-		fmt.Fprint(p.out, "\033[36mD ")
+		fmt.Fprint(p.buf, "\033[36mD ")
 	default:
-		return p
+		fmt.Fprint(p.buf, "\033[37mI ")
 	}
-	fmt.Fprintf(p.out, "%-23s ", time.Now().In(loc).Format("2006-01-02 15:04:05.999"))
 	_, fl, line, _ := runtime.Caller(3)
-	fmt.Fprintf(p.out, "%s:%d ▶ \033[0m ", path.Base(fl), line)
-	return p
+	fmt.Fprintf(p.buf, "%-23s %s:%s:%d ▶ \033[0m", time.Now().In(loc).Format("2006-01-02 15:04:05.999"), path.Base(path.Dir(fl)), path.Base(fl), line)
+	if p.tele != nil && p.tele.minLvl >= lv {
+		p.tele.key = fmt.Sprintf("%s|%s:%d", path.Base(path.Dir(fl)), path.Base(fl), line)
+	}
 }
 
 func (p *pp) free() {
-	lpool.Put(p)
+	if p.tele != nil {
+		p.tele.setValue(p.buf)
+	}
+	io.Copy(p.out, p.buf)
+	p.buf.Truncate(0)
 }
 
-func write(lv lvl, a ...interface{}) {
+func (p *pp) write(lv lvl, a ...interface{}) {
 	if minLvl >= lv {
-		p := newPrinter(lv)
-		fmt.Fprint(p.out, a...)
-		fmt.Fprint(p.out, "\n")
+		p.Lock()
+		defer p.Unlock()
+		p.writeHead(lv)
+		fmt.Fprintln(p.buf, a...)
 		p.free()
 	}
 }
 
-func writeFormat(lv lvl, format string, a ...interface{}) {
+func (p *pp) writeFormat(lv lvl, format string, a ...interface{}) {
 	if minLvl >= lv {
-		p := newPrinter(lv)
+		p.Lock()
+		defer p.Unlock()
+		p.writeHead(lv)
 		if len(format) == 0 || format[len(format)-1] != '\n' {
 			format += "\n"
 		}
-		fmt.Fprintf(p.out, format, a...)
+		fmt.Fprintf(p.buf, format, a...)
 		p.free()
 	}
 }
 
 // Debug -
 func Debug(a ...interface{}) {
-	write(LogDeb, a...)
+	pool.write(LogDeb, a...)
 }
 
 // Debugf -
 func Debugf(format string, a ...interface{}) {
-	writeFormat(LogDeb, format, a...)
+	pool.writeFormat(LogDeb, format, a...)
 }
 
+// Info -
 func Info(a ...interface{}) {
-	write(LogInf, a...)
+	pool.write(LogInf, a...)
 }
 
 // Infof -
 func Infof(format string, a ...interface{}) {
-	writeFormat(LogInf, format, a...)
+	pool.writeFormat(LogInf, format, a...)
 }
 
 // Notice -
 func Notice(a ...interface{}) {
-	write(LogNote, a...)
+	pool.write(LogNote, a...)
 }
 
 // Noticef -
 func Noticef(format string, a ...interface{}) {
-	writeFormat(LogNote, format, a...)
+	pool.writeFormat(LogNote, format, a...)
 }
 
 // Warning -
 func Warning(a ...interface{}) {
-	write(LogWarn, a...)
+	pool.write(LogWarn, a...)
 }
 
 // Warningf -
 func Warningf(format string, a ...interface{}) {
-	writeFormat(LogWarn, format, a...)
+	pool.writeFormat(LogWarn, format, a...)
 }
 
 // Error -
 func Error(a ...interface{}) {
-	write(LogErr, a...)
+	pool.write(LogErr, a...)
 }
 
 // Errorf -
 func Errorf(format string, a ...interface{}) {
-	writeFormat(LogErr, format, a...)
+	pool.writeFormat(LogErr, format, a...)
 }
 
 // Fatal -
 func Fatal(a ...interface{}) {
-	write(LogCrit, a...)
+	pool.write(LogCrit, a...)
 	os.Exit(1)
 }
 
 // Fatalf -
 func Fatalf(format string, a ...interface{}) {
-	writeFormat(LogCrit, format, a...)
+	pool.writeFormat(LogCrit, format, a...)
 	os.Exit(1)
 }
 
 // Critical -
 func Critical(a ...interface{}) {
-	write(LogCrit, a...)
+	pool.write(LogCrit, a...)
 }
 
 // Criticalf -
 func Criticalf(format string, a ...interface{}) {
-	writeFormat(LogCrit, format, a...)
+	pool.writeFormat(LogCrit, format, a...)
 }
 
-// TO DO Delete
 // Writer returns the output destination for the standard logger.
+// TO DO Delete
 func Writer() io.Writer {
-	return newPrinter(LogPass).out
+	return pool.out
 }
 
+// Logger -
 func Logger(tag string) *log.Logger {
 	var out = os.Stderr
 	if pt, ok := os.LookupEnv("LOG_PATH"); ok {
