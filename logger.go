@@ -113,7 +113,6 @@ func write(lv lvl, a ...interface{}) {
 	if minLvl >= lv {
 		p := newPrinter(lv)
 		fmt.Fprintln(p.out, a...)
-		fmt.Fprint(p.out, "\n")
 		p.free()
 	}
 }
