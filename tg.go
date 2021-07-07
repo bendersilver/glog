@@ -23,7 +23,6 @@ func newTelelog() *teleLog {
 		return nil
 	}
 	var t teleLog
-	t.minLvl = LogErr
 	t.exec, _ = os.Executable()
 	t.bot, _ = tb.NewBot(tb.Settings{
 		Token:       token,
@@ -53,12 +52,10 @@ func newTelelog() *teleLog {
 }
 
 type teleLog struct {
-	minLvl  lvl
 	timeout time.Duration
 	exec    string
 	bot     *tb.Bot
 	ids     []int
-	key     string
 	buf     sync.Map
 	oq      hs.OnceQueue
 }

@@ -106,9 +106,6 @@ func (p *pp) writeHead(lv lvl) {
 	}
 	_, fl, line, _ := runtime.Caller(3)
 	fmt.Fprintf(p.buf, "%-23s %s:%s:%d ▶ \033[0m", time.Now().In(loc).Format("2006-01-02 15:04:05.999"), path.Base(path.Dir(fl)), path.Base(fl), line)
-	if p.tele != nil && p.tele.minLvl >= lv {
-		p.tele.key = fmt.Sprintf("%s|%s:%d", path.Base(path.Dir(fl)), path.Base(fl), line)
-	}
 }
 
 func (p *pp) free() {
