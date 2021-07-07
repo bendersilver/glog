@@ -2,10 +2,11 @@
 
 ```sh
 # .env file
-LOG_PATH=path to log.			Default os.Stderr
-LOG_TG=telegram bot token.		Default not send
-LOG_TGIDS=user ids telegram.	Default not send	# LOG_TGIDS=112312,123213,124423144
-LOG_LEVEL=log level.			Default DEBUG		# DEBUG || INFO || NOTICE || WARNING || ERROR
+LOG_PATH=/root/log/				Default os.Stderr
+LOG_TG=<token>					Default not send
+LOG_TGIDS=teleId,teleId			Default not send	# LOG_TGIDS=112312,123213,124423144
+LOG_LEVEL=DEBUG					Default DEBUG		# DEBUG || INFO || NOTICE || WARNING || ERROR
+LOG_TG_TIMEOUT=10				Default 10 sec
 ```
 
 ```go
@@ -18,9 +19,6 @@ import (
 )
 
 func main() {
-	glog.Tg(glog.LogErr, "sending to telegrams once every 5 seconds")
-	glog.Tg(glog.LogPass, "sending to telegrams. no write log")
-	time.Sleep(time.Second * 6)
 	glog.Debug("Debug")
 	glog.Info("Info")
 	glog.Notice("Notice")

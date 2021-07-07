@@ -30,6 +30,7 @@ func newTelelog() *teleLog {
 		ParseMode:   tb.ModeMarkdown,
 		Synchronous: true,
 	})
+	t.timeout = time.Second * 10
 	if sec, ok := os.LookupEnv("LOG_TG_TIMEOUT"); ok {
 		i, err := strconv.Atoi(sec)
 		if err == nil {
