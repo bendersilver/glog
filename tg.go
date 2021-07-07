@@ -106,7 +106,7 @@ func send() {
 // Tg -
 func Tg(l lvl, a ...interface{}) {
 	t := newTeleLog()
-	_, fl, line, _ := runtime.Caller(1)
+	_, fl, line, _ := runtime.Caller(3)
 	t.buf.Store(fmt.Sprint(a...), fmt.Sprintf("%s:%d", path.Base(fl), line))
 	t.free()
 	write(l, a...)
@@ -116,7 +116,7 @@ func Tg(l lvl, a ...interface{}) {
 // Tgf -
 func Tgf(l lvl, format string, a ...interface{}) {
 	t := newTeleLog()
-	_, fl, line, _ := runtime.Caller(1)
+	_, fl, line, _ := runtime.Caller(3)
 	t.buf.Store(fmt.Sprintf(format, a...), fmt.Sprintf("%s:%d", path.Base(fl), line))
 	t.free()
 	writeFormat(l, format, a...)
