@@ -30,6 +30,12 @@ func newTelelog() *teleLog {
 		ParseMode:   tb.ModeMarkdown,
 		Synchronous: true,
 	})
+	if sec, ok := os.LookupEnv("LOG_TG_TIMEOUT"); ok {
+		i, err := strconv.Atoi(sec)
+		if err == nil {
+			t.timeout = time.Second * time.Duration(i)
+		}
+	}
 	if t.bot == nil {
 		return nil
 	}
@@ -46,18 +52,19 @@ func newTelelog() *teleLog {
 }
 
 type teleLog struct {
-	minLvl lvl
-	exec   string
-	bot    *tb.Bot
-	ids    []int
-	key    string
-	buf    sync.Map
-	oq     hs.OnceQueue
+	minLvl  lvl
+	timeout time.Duration
+	exec    string
+	bot     *tb.Bot
+	ids     []int
+	key     string
+	buf     sync.Map
+	oq      hs.OnceQueue
 }
 
 func (t *teleLog) send() {
 	t.oq.Do(func() {
-		time.Sleep(time.Second * 5)
+		time.Sleep(t.timeout)
 		var msg bytes.Buffer
 		t.buf.Range(func(k, _ interface{}) bool {
 			msg.WriteString(strings.ReplaceAll(k.(string), " ▶ \033[0m", " # "))
