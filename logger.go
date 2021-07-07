@@ -112,6 +112,9 @@ func (p *pp) writeHead(lv lvl) {
 }
 
 func (p *pp) free() {
+	if p.tele != nil {
+		p.tele.setValue(p.buf)
+	}
 	io.Copy(p.out, p.buf)
 	p.buf.Truncate(0)
 }
@@ -122,9 +125,6 @@ func (p *pp) write(lv lvl, a ...interface{}) {
 		defer p.Unlock()
 		p.writeHead(lv)
 		fmt.Fprintln(p.buf, a...)
-		if p.tele != nil && p.tele.minLvl >= lv {
-			p.tele.setValue(p.buf)
-		}
 		p.free()
 	}
 }
@@ -138,9 +138,6 @@ func (p *pp) writeFormat(lv lvl, format string, a ...interface{}) {
 			format += "\n"
 		}
 		fmt.Fprintf(p.buf, format, a...)
-		if p.tele != nil && p.tele.minLvl >= lv {
-			p.tele.setValue(p.buf)
-		}
 		p.free()
 	}
 }
