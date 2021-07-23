@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -209,6 +210,16 @@ func Critical(a ...interface{}) {
 // Criticalf -
 func Criticalf(format string, a ...interface{}) {
 	pool.writeFormat(LogCrit, format, a...)
+}
+
+// Recover -
+func Recover(f func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			pool.writeFormat(LogCrit, "%v\n%s", r, debug.Stack())
+		}
+	}()
+	f()
 }
 
 // Writer returns the output destination for the standard logger.
