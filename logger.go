@@ -88,7 +88,7 @@ func init() {
 	}
 }
 
-func (p *pp) writeHead(lv lvl) {
+func (p *pp) writeHead(lv lvl, offset int) {
 	switch lv {
 	case LogCrit:
 		fmt.Fprint(p.buf, "\033[35mC ")
@@ -105,7 +105,7 @@ func (p *pp) writeHead(lv lvl) {
 	default:
 		fmt.Fprint(p.buf, "\033[37mI ")
 	}
-	_, fl, line, _ := runtime.Caller(3)
+	_, fl, line, _ := runtime.Caller(3 + offset)
 	fmt.Fprintf(p.buf, "%-23s %s:%s:%d ▶ \033[0m", time.Now().In(loc).Format("2006-01-02 15:04:05.999"), path.Base(path.Dir(fl)), path.Base(fl), line)
 }
 
@@ -117,21 +117,21 @@ func (p *pp) free() {
 	p.buf.Truncate(0)
 }
 
-func (p *pp) write(lv lvl, a ...interface{}) {
+func (p *pp) write(lv lvl, offset int, a ...interface{}) {
 	if minLvl >= lv {
 		p.Lock()
 		defer p.Unlock()
-		p.writeHead(lv)
+		p.writeHead(lv, offset)
 		fmt.Fprintln(p.buf, a...)
 		p.free()
 	}
 }
 
-func (p *pp) writeFormat(lv lvl, format string, a ...interface{}) {
+func (p *pp) writeFormat(lv lvl, offset int, format string, a ...interface{}) {
 	if minLvl >= lv {
 		p.Lock()
 		defer p.Unlock()
-		p.writeHead(lv)
+		p.writeHead(lv, offset)
 		if len(format) == 0 || format[len(format)-1] != '\n' {
 			format += "\n"
 		}
@@ -140,83 +140,143 @@ func (p *pp) writeFormat(lv lvl, format string, a ...interface{}) {
 	}
 }
 
+// OffsetDebug -
+func OffsetDebug(offset int, a ...interface{}) {
+	pool.write(LogDeb, offset, a...)
+}
+
+// OffsetDebugf -
+func OffsetDebugf(offset int, format string, a ...interface{}) {
+	pool.writeFormat(LogDeb, offset, format, a...)
+}
+
+// OffsetInfo -
+func OffsetInfo(offset int, a ...interface{}) {
+	pool.write(LogInf, offset, a...)
+}
+
+// OffsetInfof -
+func OffsetInfof(offset int, format string, a ...interface{}) {
+	pool.writeFormat(LogInf, offset, format, a...)
+}
+
+// OffsetNotice -
+func OffsetNotice(offset int, a ...interface{}) {
+	pool.write(LogNote, offset, a...)
+}
+
+// OffsetNoticef -
+func OffsetNoticef(offset int, format string, a ...interface{}) {
+	pool.writeFormat(LogNote, offset, format, a...)
+}
+
+// OffsetWarning -
+func OffsetWarning(offset int, a ...interface{}) {
+	pool.write(LogWarn, offset, a...)
+}
+
+// OffsetWarningf -
+func OffsetWarningf(offset int, format string, a ...interface{}) {
+	pool.writeFormat(LogWarn, offset, format, a...)
+}
+
+// OffsetError -
+func OffsetError(offset int, a ...interface{}) {
+	pool.write(LogErr, offset, a...)
+}
+
+// OffsetErrorf -
+func OffsetErrorf(offset int, format string, a ...interface{}) {
+	pool.writeFormat(LogErr, offset, format, a...)
+}
+
+// OffsetCritical -
+func OffsetCritical(offset int, a ...interface{}) {
+	pool.write(LogCrit, offset, a...)
+}
+
+// OffsetCriticalf -
+func OffsetCriticalf(offset int, format string, a ...interface{}) {
+	pool.writeFormat(LogCrit, offset, format, a...)
+}
+
 // Debug -
 func Debug(a ...interface{}) {
-	pool.write(LogDeb, a...)
+	pool.write(LogDeb, 0, a...)
 }
 
 // Debugf -
 func Debugf(format string, a ...interface{}) {
-	pool.writeFormat(LogDeb, format, a...)
+	pool.writeFormat(LogDeb, 0, format, a...)
 }
 
 // Info -
 func Info(a ...interface{}) {
-	pool.write(LogInf, a...)
+	pool.write(LogInf, 0, a...)
 }
 
 // Infof -
 func Infof(format string, a ...interface{}) {
-	pool.writeFormat(LogInf, format, a...)
+	pool.writeFormat(LogInf, 0, format, a...)
 }
 
 // Notice -
 func Notice(a ...interface{}) {
-	pool.write(LogNote, a...)
+	pool.write(LogNote, 0, a...)
 }
 
 // Noticef -
 func Noticef(format string, a ...interface{}) {
-	pool.writeFormat(LogNote, format, a...)
+	pool.writeFormat(LogNote, 0, format, a...)
 }
 
 // Warning -
 func Warning(a ...interface{}) {
-	pool.write(LogWarn, a...)
+	pool.write(LogWarn, 0, a...)
 }
 
 // Warningf -
 func Warningf(format string, a ...interface{}) {
-	pool.writeFormat(LogWarn, format, a...)
+	pool.writeFormat(LogWarn, 0, format, a...)
 }
 
 // Error -
 func Error(a ...interface{}) {
-	pool.write(LogErr, a...)
+	pool.write(LogErr, 0, a...)
 }
 
 // Errorf -
 func Errorf(format string, a ...interface{}) {
-	pool.writeFormat(LogErr, format, a...)
+	pool.writeFormat(LogErr, 0, format, a...)
 }
 
 // Fatal -
 func Fatal(a ...interface{}) {
-	pool.write(LogCrit, a...)
+	pool.write(LogCrit, 0, a...)
 	os.Exit(1)
 }
 
 // Fatalf -
 func Fatalf(format string, a ...interface{}) {
-	pool.writeFormat(LogCrit, format, a...)
+	pool.writeFormat(LogCrit, 0, format, a...)
 	os.Exit(1)
 }
 
 // Critical -
 func Critical(a ...interface{}) {
-	pool.write(LogCrit, a...)
+	pool.write(LogCrit, 0, a...)
 }
 
 // Criticalf -
 func Criticalf(format string, a ...interface{}) {
-	pool.writeFormat(LogCrit, format, a...)
+	pool.writeFormat(LogCrit, 0, format, a...)
 }
 
 // Recover -
 func Recover(f func()) {
 	defer func() {
 		if r := recover(); r != nil {
-			pool.writeFormat(LogCrit, "%v\n%s", r, debug.Stack())
+			pool.writeFormat(LogCrit, 0, "%v\n%s", r, debug.Stack())
 		}
 	}()
 	f()
