@@ -40,7 +40,7 @@ func newTelelog() *teleLog {
 		return nil
 	}
 	for _, id := range strings.Split(ids, ",") {
-		i, err := strconv.Atoi(strings.TrimSpace(id))
+		i, err := strconv.ParseInt(strings.TrimSpace(id), 10, 64)
 		if err == nil {
 			t.ids = append(t.ids, i)
 		}
@@ -55,7 +55,7 @@ type teleLog struct {
 	timeout time.Duration
 	exec    string
 	bot     *tb.Bot
-	ids     []int
+	ids     []int64
 	buf     sync.Map
 	oq      hs.OnceQueue
 }
@@ -71,6 +71,7 @@ func (t *teleLog) send() {
 		})
 		if msg.Len() > 0 {
 			for _, id := range t.ids {
+				print(id)
 				t.bot.Send(&tb.User{ID: id}, fmt.Sprintf("```sh\n%s\n%s\n```", t.exec, msg.Bytes()))
 			}
 		}
