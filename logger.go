@@ -11,8 +11,6 @@ import (
 	"runtime/debug"
 	"sync"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 type lvl int
@@ -34,9 +32,6 @@ var minLvl lvl
 func init() {
 	minLvl = LogDeb
 	loc, _ = time.LoadLocation("Asia/Yekaterinburg")
-	if err := godotenv.Load(); err != nil {
-		fmt.Fprintf(os.Stderr, "logger pool err: %v\n", err)
-	}
 	if lv, ok := os.LookupEnv("LOG_LEVEL"); ok {
 		switch lv {
 		case "DEBUG":
@@ -63,19 +58,16 @@ func SetTimeZone(tz string) (err error) {
 
 type pp struct {
 	sync.Mutex
-	out  io.Writer
-	buf  *bytes.Buffer
-	tele *teleLog
+	out io.Writer
+	buf *bytes.Buffer
 }
 
 var pool *pp
 
 func init() {
-	godotenv.Load()
 	pool = &pp{
-		buf:  new(bytes.Buffer),
-		out:  os.Stdout,
-		tele: newTelelog(),
+		buf: new(bytes.Buffer),
+		out: os.Stdout,
 	}
 	if pt, ok := os.LookupEnv("LOG_PATH"); ok {
 		os.Mkdir(pt, os.ModePerm)
@@ -110,9 +102,6 @@ func (p *pp) writeHead(lv lvl) {
 }
 
 func (p *pp) free() {
-	if p.tele != nil {
-		p.tele.setValue(p.buf)
-	}
 	io.Copy(p.out, p.buf)
 	p.buf.Truncate(0)
 }
