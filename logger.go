@@ -42,22 +42,30 @@ func init() {
 func (p *pp) writeHead(lv lvl) {
 	switch lv {
 	case LogCrit:
-		fmt.Fprint(p.buf, "\033[35mC ")
+		// fmt.Fprint(p.buf, "\033[35mC ")
+		fmt.Fprint(p.buf, "C ")
 	case LogErr:
-		fmt.Fprint(p.buf, "\033[31mE ")
+		// fmt.Fprint(p.buf, "\033[31mE ")
+		fmt.Fprint(p.buf, "E ")
 	case LogWarn:
-		fmt.Fprint(p.buf, "\033[33mW ")
+		// fmt.Fprint(p.buf, "\033[33mW ")
+		fmt.Fprint(p.buf, "W ")
 	case LogNote:
-		fmt.Fprint(p.buf, "\033[32mN ")
+		// fmt.Fprint(p.buf, "\033[32mN ")
+		fmt.Fprint(p.buf, "N ")
 	case LogInf:
-		fmt.Fprint(p.buf, "\033[37mI ")
+		// fmt.Fprint(p.buf, "\033[37mI ")
+		fmt.Fprint(p.buf, "I ")
 	case LogDeb:
-		fmt.Fprint(p.buf, "\033[36mD ")
+		// fmt.Fprint(p.buf, "\033[36mD ")
+		fmt.Fprint(p.buf, "D ")
 	default:
-		fmt.Fprint(p.buf, "\033[37mI ")
+		// fmt.Fprint(p.buf, "\033[37mI ")
+		fmt.Fprint(p.buf, "I ")
 	}
 	_, fl, line, _ := runtime.Caller(3)
-	fmt.Fprintf(p.buf, "%s:%s:%d ▶ \033[0m", path.Base(path.Dir(fl)), path.Base(fl), line)
+	// fmt.Fprintf(p.buf, "%s:%s:%d ▶ \033[0m", path.Base(path.Dir(fl)), path.Base(fl), line)
+	fmt.Fprintf(p.buf, "%s:%s:%d ▶ ", path.Base(path.Dir(fl)), path.Base(fl), line)
 }
 
 func (p *pp) free() {
@@ -70,11 +78,6 @@ func (p *pp) write(lv lvl, a ...interface{}) {
 	defer p.Unlock()
 	p.writeHead(lv)
 	fmt.Fprintln(p.buf, a...)
-	if lv <= LogWarn {
-		p.out = os.Stderr
-	} else {
-		p.out = os.Stdout
-	}
 	p.free()
 }
 
@@ -86,11 +89,6 @@ func (p *pp) writeFormat(lv lvl, format string, a ...interface{}) {
 		format += "\n"
 	}
 	fmt.Fprintf(p.buf, format, a...)
-	if lv <= LogWarn {
-		p.out = os.Stderr
-	} else {
-		p.out = os.Stdout
-	}
 	p.free()
 }
 
