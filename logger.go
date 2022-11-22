@@ -4,15 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path"
 	"runtime"
 	"runtime/debug"
 	"sync"
-	"time"
-
-	"github.com/joho/godotenv"
 )
 
 type lvl int
@@ -28,39 +24,6 @@ const (
 	LogPass // pass log
 )
 
-var loc *time.Location
-var minLvl lvl
-
-func init() {
-	minLvl = LogDeb
-	loc, _ = time.LoadLocation("Asia/Yekaterinburg")
-	if err := godotenv.Load(); err != nil {
-		fmt.Fprintf(os.Stderr, "logger pool err: %v\n", err)
-	}
-	if lv, ok := os.LookupEnv("LOG_LEVEL"); ok {
-		switch lv {
-		case "DEBUG":
-			minLvl = LogDeb
-		case "INFO":
-			minLvl = LogInf
-		case "NOTICE":
-			minLvl = LogNote
-		case "WARNING":
-			minLvl = LogWarn
-		case "ERROR":
-			minLvl = LogErr
-		default:
-			fmt.Fprintf(os.Stderr, "log level: %s not found\n", lv)
-		}
-	}
-}
-
-// SetTimeZone -
-func SetTimeZone(tz string) (err error) {
-	loc, err = time.LoadLocation(tz)
-	return
-}
-
 type pp struct {
 	sync.Mutex
 	out  io.Writer
@@ -71,20 +34,10 @@ type pp struct {
 var pool *pp
 
 func init() {
-	godotenv.Load()
 	pool = &pp{
 		buf:  new(bytes.Buffer),
 		out:  os.Stdout,
 		tele: newTelelog(),
-	}
-	if pt, ok := os.LookupEnv("LOG_PATH"); ok {
-		os.Mkdir(pt, os.ModePerm)
-		if ex, err := os.Executable(); err == nil {
-			pool.out, err = os.OpenFile(path.Join(os.Getenv("LOG_PATH"), path.Base(ex)+".log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-			if err != nil {
-				fmt.Fprint(os.Stdout, "logger pool err ", err)
-			}
-		}
 	}
 }
 
@@ -106,7 +59,7 @@ func (p *pp) writeHead(lv lvl) {
 		fmt.Fprint(p.buf, "\033[37mI ")
 	}
 	_, fl, line, _ := runtime.Caller(3)
-	fmt.Fprintf(p.buf, "%-23s %s:%s:%d ▶ \033[0m", time.Now().In(loc).Format("2006-01-02 15:04:05.999"), path.Base(path.Dir(fl)), path.Base(fl), line)
+	fmt.Fprintf(p.buf, "%s:%s:%d ▶ \033[0m", path.Base(path.Dir(fl)), path.Base(fl), line)
 }
 
 func (p *pp) free() {
@@ -118,26 +71,32 @@ func (p *pp) free() {
 }
 
 func (p *pp) write(lv lvl, a ...interface{}) {
-	if minLvl >= lv {
-		p.Lock()
-		defer p.Unlock()
-		p.writeHead(lv)
-		fmt.Fprintln(p.buf, a...)
-		p.free()
+	p.Lock()
+	defer p.Unlock()
+	p.writeHead(lv)
+	fmt.Fprintln(p.buf, a...)
+	if lv <= LogWarn {
+		p.out = os.Stderr
+	} else {
+		p.out = os.Stdout
 	}
+	p.free()
 }
 
 func (p *pp) writeFormat(lv lvl, format string, a ...interface{}) {
-	if minLvl >= lv {
-		p.Lock()
-		defer p.Unlock()
-		p.writeHead(lv)
-		if len(format) == 0 || format[len(format)-1] != '\n' {
-			format += "\n"
-		}
-		fmt.Fprintf(p.buf, format, a...)
-		p.free()
+	p.Lock()
+	defer p.Unlock()
+	p.writeHead(lv)
+	if len(format) == 0 || format[len(format)-1] != '\n' {
+		format += "\n"
 	}
+	fmt.Fprintf(p.buf, format, a...)
+	if lv <= LogWarn {
+		p.out = os.Stderr
+	} else {
+		p.out = os.Stdout
+	}
+	p.free()
 }
 
 // Debug -
@@ -220,27 +179,4 @@ func Recover(f func()) {
 		}
 	}()
 	f()
-}
-
-// Writer returns the output destination for the standard logger.
-// TO DO Delete
-func Writer() io.Writer {
-	return pool.out
-}
-
-// Logger -
-func Logger(tag string) *log.Logger {
-	var out = os.Stderr
-	if pt, ok := os.LookupEnv("LOG_PATH"); ok {
-		os.Mkdir(pt, os.ModePerm)
-		if ex, err := os.Executable(); err == nil {
-			f, err := os.OpenFile(path.Join(ex, path.Base(ex)+fmt.Sprintf(".logger.%s.log", tag)), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-			if err != nil {
-				Error("Logger", err)
-			} else {
-				out = f
-			}
-		}
-	}
-	return log.New(out, tag, log.Ldate|log.Ltime|log.Lmicroseconds|log.Lshortfile)
 }
