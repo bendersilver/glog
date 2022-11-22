@@ -26,18 +26,16 @@ const (
 
 type pp struct {
 	sync.Mutex
-	out  io.Writer
-	buf  *bytes.Buffer
-	tele *teleLog
+	out io.Writer
+	buf *bytes.Buffer
 }
 
 var pool *pp
 
 func init() {
 	pool = &pp{
-		buf:  new(bytes.Buffer),
-		out:  os.Stdout,
-		tele: newTelelog(),
+		buf: new(bytes.Buffer),
+		out: os.Stdout,
 	}
 }
 
@@ -63,9 +61,6 @@ func (p *pp) writeHead(lv lvl) {
 }
 
 func (p *pp) free() {
-	if p.tele != nil {
-		p.tele.setValue(p.buf)
-	}
 	io.Copy(p.out, p.buf)
 	p.buf.Truncate(0)
 }
