@@ -21,7 +21,6 @@ const (
 	LogNote
 	LogInf
 	LogDeb
-	LogPass // pass log
 )
 
 type pp struct {
@@ -43,29 +42,29 @@ func (p *pp) writeHead(lv lvl) {
 	switch lv {
 	case LogCrit:
 		// fmt.Fprint(p.buf, "\033[35mC ")
-		fmt.Fprint(p.buf, "C ")
+		fmt.Fprint(p.buf, "CRT ")
 	case LogErr:
 		// fmt.Fprint(p.buf, "\033[31mE ")
-		fmt.Fprint(p.buf, "E ")
+		fmt.Fprint(p.buf, "ERR ")
 	case LogWarn:
 		// fmt.Fprint(p.buf, "\033[33mW ")
-		fmt.Fprint(p.buf, "W ")
+		fmt.Fprint(p.buf, "WRN ")
 	case LogNote:
 		// fmt.Fprint(p.buf, "\033[32mN ")
-		fmt.Fprint(p.buf, "N ")
+		fmt.Fprint(p.buf, "NTC ")
 	case LogInf:
 		// fmt.Fprint(p.buf, "\033[37mI ")
-		fmt.Fprint(p.buf, "I ")
+		fmt.Fprint(p.buf, "INF ")
 	case LogDeb:
 		// fmt.Fprint(p.buf, "\033[36mD ")
-		fmt.Fprint(p.buf, "D ")
+		fmt.Fprint(p.buf, "DBG ")
 	default:
 		// fmt.Fprint(p.buf, "\033[37mI ")
-		fmt.Fprint(p.buf, "I ")
+		fmt.Fprint(p.buf, "INF ")
 	}
 	_, fl, line, _ := runtime.Caller(3)
 	// fmt.Fprintf(p.buf, "%s:%s:%d ▶ \033[0m", path.Base(path.Dir(fl)), path.Base(fl), line)
-	fmt.Fprintf(p.buf, "%s:%s:%d ▶ ", path.Base(path.Dir(fl)), path.Base(fl), line)
+	fmt.Fprintf(p.buf, "%s:%s:%d >> ", path.Base(path.Dir(fl)), path.Base(fl), line)
 }
 
 func (p *pp) free() {
